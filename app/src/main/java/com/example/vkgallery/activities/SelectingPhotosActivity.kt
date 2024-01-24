@@ -50,7 +50,7 @@ class SelectingPhotosActivity : AppCompatActivity() {
                             val photo = InputStreamRequestBody(MultipartBody.FORM, contentResolver, uris[0])
                             val requestBody = MultipartBody.Builder()
                                 .setType(MultipartBody.FORM)
-                                .addFormDataPart("file1", "file1", photo)
+                                .addFormDataPart("file1", "file1.jpg", photo)
                                 .build()
 
                             Log.d("res", requestBody.parts[0].body.toString())
