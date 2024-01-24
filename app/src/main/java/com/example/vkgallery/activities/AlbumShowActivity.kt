@@ -1,9 +1,8 @@
-package com.example.vkgallery.models
+package com.example.vkgallery.activities
 
 import android.content.ContentValues
 import android.os.Bundle
 import android.util.Log
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -11,8 +10,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vkgallery.R
-import com.example.vkgallery.models.ui.main.AlbumShowFragment
-import com.example.vkgallery.models.ui.main.MainViewModel
+import com.example.vkgallery.models.Album
+import com.example.vkgallery.adapters.AlbumAdapter
+import com.example.vkgallery.ui.AlbumShowFragment
 import com.vk.api.sdk.VK
 import com.vk.api.sdk.VKApiCallback
 import com.vk.sdk.api.photos.PhotosService
@@ -20,7 +20,7 @@ import com.vk.sdk.api.photos.dto.PhotosGetAlbumsResponseDto
 import kotlinx.coroutines.launch
 
 
-class AlbumShow : AppCompatActivity() {
+class AlbumShowActivity : AppCompatActivity() {
     private lateinit var albumsAdapter: AlbumAdapter
     private lateinit var albumsList: MutableList<Album>
     private lateinit var albumsRecyclerView: RecyclerView
@@ -35,11 +35,8 @@ class AlbumShow : AppCompatActivity() {
         }
 
         val activity = this
-
-        val viewModel: MainViewModel by viewModels()
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.rollDice()
                 VK.execute(PhotosService().photosGetAlbums(needCovers = true), object:
                     VKApiCallback<PhotosGetAlbumsResponseDto> {
                     override fun success(result: PhotosGetAlbumsResponseDto) {
@@ -48,7 +45,7 @@ class AlbumShow : AppCompatActivity() {
                             album.thumbSrc?.let { Album(it, album.title, album.id) }
                                 ?.let { albumsList.add(it) }
                         }
-                        Log.i("size", albumsList.size.toString())
+
                         albumsRecyclerView = findViewById(R.id.album_view)
                         albumsRecyclerView.layoutManager = GridLayoutManager(activity, 2, RecyclerView.VERTICAL, false)
                         albumsAdapter = AlbumAdapter(activity, albumsList)

@@ -20,7 +20,7 @@
             android:name=".activities.SelectingPhotosActivity"
             android:exported="false" />
         <activity
-            android:name=".models.AlbumShow"
+            android:name=".activities.AlbumShowActivity"
             android:exported="false" />
         <activity
             android:name=".activities.MainActivity"

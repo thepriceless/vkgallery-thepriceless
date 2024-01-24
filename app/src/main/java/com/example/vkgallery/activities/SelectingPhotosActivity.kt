@@ -2,6 +2,7 @@ package com.example.vkgallery.activities
 
 import android.Manifest
 import android.content.ContentValues
+import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -39,29 +40,28 @@ class SelectingPhotosActivity : AppCompatActivity() {
 
         checkPermission(Manifest.permission.READ_MEDIA_IMAGES, GALLERY_PERMISSION_CODE)
 
-        val pickMultipleMedia = registerForActivityResult(PickMultipleVisualMedia(10)) { uris ->
+        val pickMultipleMedia = registerForActivityResult(PickMultipleVisualMedia(5)) { uris ->
             if (uris.isNotEmpty()) {
-                Log.d("PhotoPicker", "Number of items selected: ${uris.size}")
                 VK.execute(PhotosService().photosGetUploadServer(
                     albumId = intent.getIntExtra("album_id", 0)),
                     object: VKApiCallback<PhotosPhotoUploadDto> {
                         override fun success(result: PhotosPhotoUploadDto) {
                             val client = OkHttpClient()
-                            val photo = InputStreamRequestBody(MultipartBody.FORM, contentResolver, uris[0])
-                            val requestBody = MultipartBody.Builder()
-                                .setType(MultipartBody.FORM)
-                                .addFormDataPart("file1", "file1.jpg", photo)
-                                .build()
 
-                            Log.d("res", requestBody.parts[0].body.toString())
+                            val requestBody = MultipartBody.Builder().setType(MultipartBody.FORM)
+                            for (i in uris.indices) {
+                                requestBody.addFormDataPart(
+                                    "file${i + 1}",
+                                    "file${i + 1}.jpg",
+                                    InputStreamRequestBody(MultipartBody.FORM, contentResolver, uris[i]))
+                            }
 
                             val request = Request.Builder()
                                 .url(result.uploadUrl)
-                                .post(requestBody)
+                                .post(requestBody.build())
                                 .build()
 
                             val scope = CoroutineScope(Dispatchers.IO)
-
                             scope.launch {
                                 val response = client.newCall(request).execute()
 
@@ -77,11 +77,13 @@ class SelectingPhotosActivity : AppCompatActivity() {
                                         hash = data.hash
                                     ), object: VKApiCallback<List<PhotosPhotoDto>> {
                                         override fun success(result: List<PhotosPhotoDto>) {
-                                            Log.i("Success", result[0].photo256.toString())
+                                            Toast.makeText(applicationContext, "Photos added", Toast.LENGTH_SHORT).show()
+                                            val intent = Intent(applicationContext, AlbumShowActivity::class.java)
+                                            startActivity(intent)
                                         }
 
                                         override fun fail(error: Exception) {
-                                            Log.e(ContentValues.TAG, error.toString())
+                                            Toast.makeText(applicationContext, "Photos not added", Toast.LENGTH_SHORT).show()
                                         }
                                     })
                                 }
